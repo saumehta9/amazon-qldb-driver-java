@@ -45,11 +45,11 @@ public class StatementExecutionIntegTest {
 
     @BeforeAll
     public static void setup() throws InterruptedException {
-        ledgerManager = new LedgerManager(Constants.LEDGER_NAME, System.getProperty("region"));
+        ledgerManager = new LedgerManager(Constants.LEDGER_NAME+System.getProperty("ledgerSuffix"), System.getProperty("region"));
 
         ledgerManager.runCreateLedger();
 
-        driver = ledgerManager.createQldbDriver(Constants.DEFAULT, Constants.DEFAULT);
+        driver = ledgerManager.createQldbDriver(Constants.DEFAULT, Constants.RETRY_LIMIT);
 
         // Create table
         String createTableQuery = String.format("CREATE TABLE %s", Constants.TABLE_NAME);
@@ -64,7 +64,6 @@ public class StatementExecutionIntegTest {
                 return count;
             });
         assertEquals(1, createTableCount);
-
         Iterable<String> result = driver.getTableNames();
         for (String tableName : result) {
             assertEquals(Constants.TABLE_NAME, tableName);
@@ -154,7 +153,7 @@ public class StatementExecutionIntegTest {
         try {
             driver.execute(txn -> { txn.execute(createTableQuery); });
         } catch (Exception e) {
-            assertTrue(e.getCause() instanceof BadRequestException);
+            assertTrue(e instanceof BadRequestException);
 
             return;
         }
@@ -566,7 +565,7 @@ public class StatementExecutionIntegTest {
 
         Throwable exception = childThreadException.get();
         assertNotNull(exception);
-        assertTrue(exception.getCause() instanceof OccConflictException);
+        assertTrue(exception instanceof OccConflictException);
 
         // Update document to make sure everything still works after the OCC exception.
         AtomicInteger updatedValue = new AtomicInteger();
@@ -635,7 +634,7 @@ public class StatementExecutionIntegTest {
         try {
             driver.execute(txn -> { txn.execute(deleteQuery); });
         } catch (Exception e) {
-            assertTrue(e.getCause() instanceof BadRequestException);
+            assertTrue(e instanceof BadRequestException);
 
             return;
         }
